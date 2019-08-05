@@ -6,7 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
+import com.example.splitpayandroid.model.UsersList
+import com.example.splitpayandroid.retrofit.RetrofitProvider
+import com.example.splitpayandroid.retrofit.UsersService
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -33,13 +38,27 @@ class IntroActivity : AppCompatActivity(), IntroView {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", SnackListener()).show()
         }
-        initPresenter()
+        val usersService = RetrofitProvider().usersService
+        initPresenter(usersService)
+        initVM(usersService)
     }
 
-    private fun initPresenter(){
+    private fun initPresenter(usersService: UsersService){
         presenter = IntroPresenterImpl()
         presenter?.attachView(this)
-        presenter?.fetchUsers()
+        presenter?.fetchUsers(usersService)
+    }
+
+    private fun initVM(usersService: UsersService){
+        val vmFactory = VMFactory(usersService)
+        val vm = ViewModelProviders.of(this, vmFactory).get(VM::class.java)
+        vm.usersList.observe(this, object: Observer<UsersList>{
+            override fun onChanged(t: UsersList) {
+                println("returned users list in vm:")
+                println(t)
+            }
+        })
+        vm.loadGroups()
     }
 
     override fun onDestroy() {

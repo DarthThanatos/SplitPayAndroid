@@ -1,7 +1,7 @@
 package com.example.splitpayandroid.intro
 
 import com.example.splitpayandroid.model.User
-import com.example.splitpayandroid.retrofit.RetrofitProvider
+import com.example.splitpayandroid.retrofit.UsersService
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -9,7 +9,7 @@ import io.reactivex.disposables.Disposable
 
 
 interface IntroPresenter{
-    fun fetchUsers()
+    fun fetchUsers(usersService: UsersService)
     fun attachView(view: IntroView)
     fun detachView()
 }
@@ -55,9 +55,8 @@ class IntroPresenterImpl: IntroPresenter{
 
     }
 
-    override fun fetchUsers() {
-        RetrofitProvider()
-            .usersService
+    override fun fetchUsers(usersService: UsersService) {
+        usersService
             .getUser(20005L)
             .subscribeOn(io.reactivex.schedulers.Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

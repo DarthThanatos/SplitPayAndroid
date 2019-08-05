@@ -8,3 +8,4 @@ data class User(
     val isoffline: Boolean = true,
     val avatarUrl: String = ""
 )
+typealias UsersList = List<User>

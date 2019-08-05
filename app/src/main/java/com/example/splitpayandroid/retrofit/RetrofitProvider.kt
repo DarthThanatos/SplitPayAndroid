@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class RetrofitProvider{
 
     private val BASE_URL = "http://192.168.0.100:8080"
-    lateinit var usersService: UsersService
+    var usersService: UsersService
 
     init{
         val logging = HttpLoggingInterceptor()
