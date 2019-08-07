@@ -13,4 +13,5 @@ interface UsersService{
 
     @GET("/users/groups/{groupid}")
     fun getUsersInGroup(@Path("groupid") groupId: Long): Observable<UsersList>
+
 }
