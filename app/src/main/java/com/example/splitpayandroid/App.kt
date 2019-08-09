@@ -16,7 +16,6 @@ import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import javax.inject.Inject
 import javax.inject.Named
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -37,9 +36,6 @@ class Contributing{
     @Provides @IntoMap @StringKey("three")
     fun three() = 3
 
-//    @Provides @IntoMap @StringKey("first")
-//    fun threeProv() = Provider<Int>({ 3 })
-
     @Provides @Named("yo") fun yo() = 3
 }
 
@@ -52,10 +48,19 @@ abstract class AbstractContributor{
         @Provides
         @JvmStatic
         fun provideThree() = 3
+
+
+        // when uncommented, dagger prioritises 4 provided by the function below over 3 provided in the function above
+        // since the factory method that returns 4 is qualified
+
+//        @Provides
+//        @JvmStatic
+//        @Named("yo1")
+//        fun provideFour() = 4
     }
 
     @Binds @Named("yo1")
-    abstract fun three(res: Int): Number
+    abstract fun three(res: Int): Int //return type can be Number only when qualified factory method is available in the module
 
 }
 
