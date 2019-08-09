@@ -46,8 +46,16 @@ class Contributing{
 @Module
 abstract class AbstractContributor{
 
-//    @Binds @Named("yo")
-//    abstract fun three(res: Int = 3): Int
+    @Module
+    companion object{
+
+        @Provides
+        @JvmStatic
+        fun provideThree() = 3
+    }
+
+    @Binds @Named("yo1")
+    abstract fun three(res: Int): Number
 
 }
 

@@ -61,7 +61,7 @@ abstract class VieModelModule{
 }
 
 class  VMFactory @Inject constructor(private val usersService: UsersService,
-                                     private val mapOne: Map<String, Int>, @Named("yo") val yo: Int): ViewModelProvider.Factory {
+                                     private val mapOne: Map<String, Int>, @Named("yo1") val yo: Int): ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         println("VM Fac, $yo")

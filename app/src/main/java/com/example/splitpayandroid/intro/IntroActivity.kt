@@ -64,6 +64,7 @@ class IntroActivity : AppCompatActivity(), IntroView {
     private fun injectSelf(){
         AndroidInjection.inject(this)
         println("inject self")
+        println("Hello world")
         mapOne.forEach{println(it)}
         mapTwo.forEach{println(it)}
     }
