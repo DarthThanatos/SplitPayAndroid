@@ -12,8 +12,6 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Provider
 
 
 class VM(private val usersService: UsersService): ViewModel(){
@@ -53,6 +51,7 @@ class VM(private val usersService: UsersService): ViewModel(){
     }
 }
 
+@Suppress("unused")
 @Module
 abstract class VieModelModule{
 
@@ -60,12 +59,10 @@ abstract class VieModelModule{
     abstract fun bindVMFactory(vmFactory: VMFactory): ViewModelProvider.Factory
 }
 
-class  VMFactory @Inject constructor(private val usersService: UsersService,
-                                     private val mapOne: Map<String, Int>, @Named("yo1") val yo: Int): ViewModelProvider.Factory {
+class  VMFactory @Inject constructor(private val usersService: UsersService): ViewModelProvider.Factory {
+
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        println("VM Fac, $yo")
-        mapOne.forEach{println(it)}
         if(modelClass.isAssignableFrom(VM::class.java)){
             return VM(usersService) as T
         }

@@ -1,5 +1,7 @@
 package com.example.splitpayandroid.intro
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -9,44 +11,40 @@ import android.view.View
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
-import com.example.splitpayandroid.annotation.FirstMap
-import com.example.splitpayandroid.annotation.SecondMap
+import com.example.splitpayandroid.dagger_snippet.ConstructorInj
+import com.example.splitpayandroid.groups.GroupsActivity
 import com.example.splitpayandroid.model.UsersList
 import com.example.splitpayandroid.retrofit.UsersService
 import dagger.android.AndroidInjection
-
 import kotlinx.android.synthetic.main.activity_main.*
 import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Provider
+
 
 interface IntroView{
 
 }
 
-class SnackListener: View.OnClickListener{
+class SnackListener(private val activity: Activity): View.OnClickListener {
+
     override fun onClick(v: View?) {
-        println("clicked snackbar")
+        goToGroups()
+    }
+
+    private fun goToGroups(){
+        val intent = Intent(activity, GroupsActivity::class.java)
+        activity.startActivity(intent)
     }
 }
 
 class IntroActivity : AppCompatActivity(), IntroView {
 
-    // if you inject a primitive
-    // @set:[Inject Named("logoIcon")] var logoIcon: Int = 0
-    @field:[Inject FirstMap]
-    lateinit var mapOne: Map<String, Int>
+    @Inject lateinit var constructorInj: ConstructorInj
 
-    @field:[Inject Named("secondMap")]
-    lateinit var mapTwo: Map<String, Int>
+    @Inject lateinit var usersService: UsersService
 
-    @Inject
-    lateinit var usersService: UsersService
+    @Inject lateinit var vmFactory: VMFactory
 
-    @Inject
-    lateinit var vmFactory: VMFactory
-
-    private var presenter: IntroPresenter? = null
+    @Inject lateinit var presenter: IntroPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injectSelf()
@@ -55,7 +53,7 @@ class IntroActivity : AppCompatActivity(), IntroView {
         setSupportActionBar(toolbar)
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", SnackListener()).show()
+                .setAction("Action", SnackListener(this)).show()
         }
         initPresenter(usersService)
         initVM()
@@ -63,16 +61,12 @@ class IntroActivity : AppCompatActivity(), IntroView {
 
     private fun injectSelf(){
         AndroidInjection.inject(this)
-        println("inject self")
-        println("Hello world")
-        mapOne.forEach{println(it)}
-        mapTwo.forEach{println(it)}
+        constructorInj.snippet()
     }
 
     private fun initPresenter(usersService: UsersService){
-        presenter = IntroPresenterImpl()
-        presenter?.attachView(this)
-        presenter?.fetchUsers(usersService)
+        presenter.attachView(this)
+        presenter.fetchUsers(usersService)
     }
 
     private fun initVM(){
@@ -87,8 +81,7 @@ class IntroActivity : AppCompatActivity(), IntroView {
     }
 
     override fun onDestroy() {
-        presenter?.detachView()
-        presenter = null
+        presenter.detachView()
         super.onDestroy()
     }
 

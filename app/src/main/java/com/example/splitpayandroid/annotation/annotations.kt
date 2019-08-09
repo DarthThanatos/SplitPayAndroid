@@ -20,7 +20,13 @@ annotation class FirstMap
 @javax.inject.Qualifier
 annotation class SecondMap
 
-//@Target(AnnotationTarget.FUNCTION)
-//@Retention(AnnotationRetention.RUNTIME)
-//@MapKey
-//annotation class ProviderKey
+enum class MessageType {
+    TEXT_MESSAGE_TYPE,
+    IMAGE_MESSAGE_TYPE,
+    INFO_MESSAGE_TYPE
+}
+
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+@MapKey
+annotation class ProviderKey(val messageType: MessageType)
