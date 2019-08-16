@@ -3,12 +3,15 @@ package com.example.splitpayandroid.dagger_snippet
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.Context
+import com.example.splitpayandroid.ActivityModule
 import com.example.splitpayandroid.AppModule
 import com.example.splitpayandroid.annotation.FirstMap
 import com.example.splitpayandroid.annotation.MessageType
 import com.example.splitpayandroid.annotation.ProviderKey
 import com.example.splitpayandroid.annotation.SecondMap
 import com.example.splitpayandroid.intro.IntroPresenterModule
+import com.example.splitpayandroid.intro.ViewModelModule
 import com.example.splitpayandroid.retrofit.RetrofitProvider
 import dagger.Binds
 import dagger.Component
@@ -112,11 +115,28 @@ abstract class AbstractContributor{
     abstract fun mapCustomKey(i: Int): Int
 }
 
-@Component(modules = [RetrofitProvider::class, AppModule::class, AndroidInjectionModule::class, Contributing::class, AbstractContributor::class, IntroPresenterModule::class])
+
+
+@Suppress("unused")
+@Module
+abstract class App_ContextModule{
+
+    @Binds
+    abstract fun bindContext(app: App_): Context
+}
+
+
+@Component(modules = [
+    ActivityModule::class, RetrofitProvider::class, AppModule::class,
+    AndroidInjectionModule::class, Contributing::class, AbstractContributor::class,
+    IntroPresenterModule::class, ViewModelModule::class, App_ContextModule::class
+])
 @Singleton
 interface AppComponent_: AndroidInjector<App_>
 {
 //    fun inject(introActivity: IntroActivity)
+    @Component.Builder
+    abstract class Builder : AndroidInjector.Builder<App_>()
 }
 
 @SuppressLint("Registered")
@@ -130,7 +150,7 @@ class App_: Application(), HasActivityInjector {
 
     override fun onCreate() {
         super.onCreate()
-        DaggerAppComponent_.create().inject(this)
+        DaggerAppComponent_.builder().create(this).inject(this)
     }
 
 }
