@@ -3,8 +3,8 @@
           package="com.example.splitpayandroid">
 
     <uses-permission android:name="android.permission.INTERNET"/>
-
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+
     <application
             android:name=".App"
             android:allowBackup="true"
@@ -14,9 +14,44 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
+                android:name=".intro.ConfirmMailActivity"
+                android:label="@string/title_activity_confirm_mail"
+                android:theme="@style/AppTheme.NoActionBar">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                        android:host="splitpay.page.link.auth"
+                        android:scheme="https"/>
+            </intent-filter>
+        </activity>
+
+        <service
+                android:name=".messaging_service.MessagingService"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <activity
                 android:name=".groups.GroupsActivity"
                 android:label="@string/title_activity_groups"
                 android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data
+                        android:host="ithanatos.yo.o"
+                        android:scheme="http"/>
+            </intent-filter>
         </activity>
         <activity
                 android:name=".intro.IntroActivity"
@@ -27,6 +62,17 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
+
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
+
+                <!--<data-->
+                        <!--android:host="http://splitpay.page.link"-->
+                        <!--android:scheme="http"/>-->
+            <!--</intent-filter>-->
         </activity>
     </application>
 

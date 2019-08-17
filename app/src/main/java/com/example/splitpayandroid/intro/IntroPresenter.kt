@@ -2,8 +2,6 @@ package com.example.splitpayandroid.intro
 
 import com.example.splitpayandroid.model.User
 import com.example.splitpayandroid.retrofit.UsersService
-import dagger.Binds
-import dagger.Module
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -17,12 +15,6 @@ interface IntroPresenter{
     fun detachView()
 }
 
-@Suppress("unused")
-@Module
-interface IntroPresenterModule{
-    @Binds
-    fun bindIntroPresenter(introPresenterImpl: IntroPresenterImpl): IntroPresenter
-}
 
 class IntroPresenterImpl @Inject constructor(): IntroPresenter{
 

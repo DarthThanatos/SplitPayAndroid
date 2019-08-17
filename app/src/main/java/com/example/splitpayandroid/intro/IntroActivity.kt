@@ -1,7 +1,6 @@
 package com.example.splitpayandroid.intro
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
@@ -14,25 +13,22 @@ import androidx.core.os.CancellationSignal
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
-import com.example.splitpayandroid.dagger_snippet.ConstructorInj
+import com.example.splitpayandroid.architecture.VMFactory
+import com.example.splitpayandroid.di.snippet.ConstructorInj
 import com.example.splitpayandroid.groups.GroupsActivity
 import com.example.splitpayandroid.model.UsersList
 import com.example.splitpayandroid.retrofit.UsersService
+import com.example.splitpayandroid.util.SHARE_LINK_SHORT
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import dagger.android.AndroidInjection
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.lang.Exception
 import javax.inject.Inject
 
-
-interface IntroView{
-
-}
+interface IntroView
 
 class SnackListener(private val activity: Activity): View.OnClickListener {
 
@@ -56,7 +52,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
 
     @Inject lateinit var presenter: IntroPresenter
 
-    private lateinit var vm: VM
+    private lateinit var introVm: IntroVM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         injectSelf()
@@ -82,17 +78,17 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     private fun initVM(){
-        vm = ViewModelProviders.of(this, vmFactory).get(VM::class.java)
-        vm.usersList.observe(this, Observer<UsersList> { t ->
-            println("returned users list in vm:")
+        introVm = ViewModelProviders.of(this, vmFactory).get(IntroVM::class.java)
+        introVm.usersList.observe(this, Observer<UsersList> { t ->
+            println("returned users list in introVm:")
             println(t)
         })
-        vm.biometricUnlocked.observe(this, Observer<Boolean> {unlocked ->
+        introVm.biometricUnlocked.observe(this, Observer<Boolean> { unlocked ->
             if(unlocked){
-                bioAuth()
+                bioRegister()
             }
         })
-        vm.loadGroups()
+        introVm.loadGroups()
     }
 
     override fun onDestroy() {
@@ -117,45 +113,84 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun onAuthenticate(view: View){
-        stdAuth()
+    fun onRegister(view: View){
+        stdAuthOperation(IntroVM::create, onRegisteredListener(), onFailureListener("Registration"))
     }
 
-    private fun stdAuth(){
-        val email = emailInput.text.toString()
-        val password = passwordInput.text.toString()
-        vm.create(email, password, onAuthenticatedListener(), onFailureListener())
+    @Suppress("UNUSED_PARAMETER")
+    fun onLogin(view: View){
+        if(introVm.getLogged() != null){
+            goToGroupsActivity()
+        }
+        else {
+            stdAuthOperation(IntroVM::login, onLoginListener(), onFailureListener(("Login")))
+        }
     }
 
-    private fun onAuthenticatedListener() = object: OnCompleteListener<AuthResult>{
-        override fun onComplete(task: Task<AuthResult>) {
-            val msg = if(!task.isSuccessful) "Authentication failed" else "Authenticated user ${task.result?.user}"
+    @Suppress("UNUSED_PARAMETER")
+    fun verifyEmail(view: View){
+        introVm.emailOnlyRegistration(emailInput.text.toString(), onEmailOnlyFinishedListener(), onFailureListener("Email verification"))
+    }
+
+
+    private fun onEmailOnlyFinishedListener() =
+        OnCompleteListener<AuthResult> {
+            val msg = if(!it.isSuccessful) "Email verification failed" else "Email verification: authenticated user ${it.result?.user?.email}"
             Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
-            if(task.isSuccessful){
-                vm.logLogin("app")
-                vm.biometricUnlocked.value = true
+            if(it.isSuccessful){
+                goToGroupsActivity()
             }
         }
+
+    private fun stdAuthOperation(
+        authOperation: IntroVM.(String, String, OnCompleteListener<AuthResult>, OnFailureListener) -> Unit,
+        onSuccess: OnCompleteListener<AuthResult>,
+        onFailure: OnFailureListener
+    ){
+        val email = emailInput.text.toString()
+        val password = passwordInput.text.toString()
+        authOperation(introVm, email, password, onSuccess, onFailure)
     }
 
-    private fun onFailureListener() = object: OnFailureListener{
-        override fun onFailure(e: Exception) {
-            Toast.makeText(this@IntroActivity, "Authentication failed, what went wrong: ${e.message}", Toast.LENGTH_LONG).show()
+    private fun onRegisteredListener() =
+        OnCompleteListener<AuthResult> { task ->
+            val msg = if(!task.isSuccessful) "Registration failed" else "Authenticated user ${task.result?.user}"
+            Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
+            if(task.isSuccessful){
+                introVm.logLogin("app")
+                introVm.biometricUnlocked.value = true
+            }
         }
+
+    private fun onFailureListener(operation: String) = OnFailureListener {
+        e -> Toast.makeText(this@IntroActivity, "$operation failed, what went wrong: ${e.message}", Toast.LENGTH_LONG).show()
     }
 
-    private fun bioAuth(){
+    private fun onLoginListener() =
+        OnCompleteListener<AuthResult> {
+            val msg = if(!it.isSuccessful) "Authentication failed" else "Authenticated user ${it.result?.user}"
+            Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
+            if(it.isSuccessful){
+                goToGroupsActivity()
+            }
+        }
+
+    private fun goToGroupsActivity(){
+        val intent = Intent(this, GroupsActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun bioRegister(){
         val fingerprintManagerCompat = FingerprintManagerCompat.from(this)
         if(!fingerprintManagerCompat.isHardwareDetected){
             Toast.makeText(this, "No biometric hardware detected", Toast.LENGTH_LONG).show()
-//            return
         }
-        compatAuth(fingerprintManagerCompat)
-        showAuthDialog()
+        compatRegister(fingerprintManagerCompat)
+        showBioRegisterDialog()
     }
 
-    private fun compatAuth(fingerprintManagerCompat: FingerprintManagerCompat){
-        vm.getFingerPrint(this) { fp ->
+    private fun compatRegister(fingerprintManagerCompat: FingerprintManagerCompat){
+        introVm.getFingerPrint(this) { fp ->
             fingerprintManagerCompat.authenticate(
                 fp.cryptoObject,
                 0,
@@ -166,13 +201,13 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
         }
     }
 
-    private fun showAuthDialog(){
+    private fun showBioRegisterDialog(){
         val biometricDialogFragment = BiometricDialogFragment.newInstance()
         biometricDialogFragment.show(supportFragmentManager, "biometric_dialog")
     }
 
     override fun onAuthenticationHelp(msg: String) {
-        vm.authenticationStatus.value = msg
+        introVm.authenticationStatus.value = msg
         Toast.makeText(this, "Hint: $msg", Toast.LENGTH_LONG).show()
     }
 
@@ -181,13 +216,30 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     override fun onAuthenticationError(msg: String) {
-        vm.authenticationStatus.value = msg
+        introVm.authenticationStatus.value = msg
         Toast.makeText(this, "Error: $msg", Toast.LENGTH_LONG).show()
     }
 
     override fun onAuthenticationSucceeded(result: FingerprintManagerCompat.AuthenticationResult) {
-        vm.authenticationStatus.value = "success"
+        introVm.authenticationStatus.value = "success"
         Toast.makeText(this, "Successfully authenticated", Toast.LENGTH_LONG).show()
 
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun shareClicked(view: View){
+
+        val link = SHARE_LINK_SHORT
+
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.type = "text/plain"
+        intent.putExtra(Intent.EXTRA_TEXT, link)
+
+        startActivity(Intent.createChooser(intent, "Share Link"))
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun signOut(view: View){
+        introVm.signout()
     }
 }

@@ -17,4 +17,11 @@ class Analytics @Inject constructor(context: Context){
         anal.logEvent(FirebaseAnalytics.Event.LOGIN, bundle)
     }
 
+    fun logYolo(){
+        val bundle = Bundle()
+        bundle.putString("yoloStr", "yolo1")
+        bundle.putInt("yoloInt", 12390)
+        anal.logEvent("yoloEvent", bundle)
+    }
+
 }
