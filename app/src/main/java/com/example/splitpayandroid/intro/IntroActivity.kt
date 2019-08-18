@@ -26,6 +26,7 @@ import dagger.android.AndroidInjection
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import timber.log.Timber
 import javax.inject.Inject
 
 interface IntroView
@@ -80,8 +81,8 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     private fun initVM(){
         introVm = ViewModelProviders.of(this, vmFactory).get(IntroVM::class.java)
         introVm.usersList.observe(this, Observer<UsersList> { t ->
-            println("returned users list in introVm:")
-            println(t)
+            Timber.d("returned users list in introVm:")
+            Timber.d(t.toString())
         })
         introVm.biometricUnlocked.observe(this, Observer<Boolean> { unlocked ->
             if(unlocked){
@@ -129,16 +130,17 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
 
     @Suppress("UNUSED_PARAMETER")
     fun verifyEmail(view: View){
+//        startActivity(Intent(this, ConfirmMailActivity::class.java))
         introVm.emailOnlyRegistration(emailInput.text.toString(), onEmailOnlyFinishedListener(), onFailureListener("Email verification"))
     }
 
 
     private fun onEmailOnlyFinishedListener() =
-        OnCompleteListener<AuthResult> {
-            val msg = if(!it.isSuccessful) "Email verification failed" else "Email verification: authenticated user ${it.result?.user?.email}"
+        OnCompleteListener<Void> {
+            val msg = if(!it.isSuccessful) "Email verification failed" else "Email verification: check your mailbox and follow the link in the noreply message. "
             Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
             if(it.isSuccessful){
-                goToGroupsActivity()
+                finish()
             }
         }
 
@@ -163,7 +165,10 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
         }
 
     private fun onFailureListener(operation: String) = OnFailureListener {
-        e -> Toast.makeText(this@IntroActivity, "$operation failed, what went wrong: ${e.message}", Toast.LENGTH_LONG).show()
+        e ->
+            val msg = "$operation failed, what went wrong: ${e.message}"
+            Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
+            e.printStackTrace()
     }
 
     private fun onLoginListener() =
@@ -242,4 +247,5 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     fun signOut(view: View){
         introVm.signout()
     }
+
 }

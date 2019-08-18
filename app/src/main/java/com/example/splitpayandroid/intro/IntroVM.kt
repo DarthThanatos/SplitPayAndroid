@@ -30,7 +30,7 @@ class IntroVM(private val introRepository: IntroRepository): ViewModel(){
         introRepository.confirmEmailOnly(email, intent, onComplete, onFailure)
     }
 
-    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
         introRepository.emailOnlyRegistration(email, onComplete, onFailure)
     }
 

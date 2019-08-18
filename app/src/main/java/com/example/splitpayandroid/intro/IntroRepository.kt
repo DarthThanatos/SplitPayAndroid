@@ -9,6 +9,7 @@ import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import timber.log.Timber
 import javax.inject.Inject
 
 class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics){
@@ -27,6 +28,7 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
 
     fun confirmEmailOnly(email: String, intent: Intent, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         val emailLink = intent.data?.toString() ?: ""
+        Timber.d(emailLink)
         if(auth.isSignInWithEmailLink(emailLink)){
             auth.signInWithEmailLink(email, emailLink).addOnCompleteListener(onComplete).addOnFailureListener(onFailure)
         }
@@ -40,19 +42,26 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
 
-    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
         val actionCodeSettings = ActionCodeSettings.newBuilder()
+
             // URL you want to redirect back to. The domain (www.example.com) for this
             // URL must be whitelisted in the Firebase Console.
-            .setUrl("https://splitpay.page.link.auth")
-            // This must be true
-            .setHandleCodeInApp(true)
+
+            // Due to some bug, for now you cannot use any other link than that of a default authorised domain with prepended https scheme
+            // (same goes for a "data" tag in intent-filter element of AndroidManifest.xml) and some following suffixes (like /emailSignInLink in the example below);
+            // no path prefix allowed (I think... )
+
+            // More info regarding the bug at: https://github.com/firebase/quickstart-android/issues/488
+                
+            .setUrl("https://splitpay-e9233.firebaseapp.com/emailSignInLink")
+            .setHandleCodeInApp(true) // This must be true
             .setAndroidPackageName(
                 "com.example.splitpayandroid",
-                true, /* installIfNotAvailable */
-                "1" /* minimumVersion */)
+                false, /* installIfNotAvailable */
+                null /* minimumVersion, null == default -> current version */)
             .build()
-        auth.sendSignInLinkToEmail(email, actionCodeSettings)
+        auth.sendSignInLinkToEmail(email, actionCodeSettings).addOnCompleteListener(onComplete).addOnFailureListener(onFailure)
     }
 
     fun getUserGroups() =
