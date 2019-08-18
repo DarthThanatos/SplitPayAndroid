@@ -8,4 +8,9 @@ data class User(
     val isoffline: Boolean = true,
     val avatarUrl: String = ""
 )
+
 typealias UsersList = List<User>
+
+data class GroupDto(val groupid: Int,
+                    val displayname: String,
+                    val isactive: Boolean)

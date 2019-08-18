@@ -15,6 +15,7 @@ class RetrofitProvider{
 
     private val BASE_URL = "http://192.168.0.100:8080"
     private var usersService: UsersService
+    private var groupsService: GroupsService
 
     init{
         val logging = HttpLoggingInterceptor()
@@ -28,11 +29,15 @@ class RetrofitProvider{
             .client(httpClient.build())
             .build()
         usersService = retrofit.create(UsersService::class.java)
+        groupsService = retrofit.create(GroupsService::class.java)
     }
 
     @Provides
     @Singleton
     fun provideUserService() = usersService
 
+    @Provides
+    @Singleton
+    fun provideGroupService() = groupsService
 
 }

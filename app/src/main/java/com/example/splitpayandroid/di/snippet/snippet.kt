@@ -8,10 +8,7 @@ import com.example.splitpayandroid.annotation.FirstMap
 import com.example.splitpayandroid.annotation.MessageType
 import com.example.splitpayandroid.annotation.ProviderKey
 import com.example.splitpayandroid.annotation.SecondMap
-import com.example.splitpayandroid.di.module.ActivityModule
-import com.example.splitpayandroid.di.module.AppModule
-import com.example.splitpayandroid.di.module.ConnectivityModule
-import com.example.splitpayandroid.di.module.IntroPresenterModule
+import com.example.splitpayandroid.di.module.*
 import com.example.splitpayandroid.retrofit.RetrofitProvider
 import dagger.Binds
 import dagger.Component
@@ -129,7 +126,8 @@ abstract class App_ContextModule{
 @Component(modules = [
     ActivityModule::class, RetrofitProvider::class, AppModule::class,
     AndroidInjectionModule::class, Contributing::class, AbstractContributor::class,
-    IntroPresenterModule::class,  App_ContextModule::class, ConnectivityModule::class
+    IntroPresenterModule::class,  App_ContextModule::class, ConnectivityModule::class,
+    DatabaseModule::class
 ])
 @Singleton
 interface AppComponent_: AndroidInjector<App_>

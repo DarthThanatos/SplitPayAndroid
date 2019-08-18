@@ -32,6 +32,8 @@ interface IntroRepositoryWork{
     fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener)
     fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener)
     fun getUserGroups(): Observable<UsersList>
+
+    fun updateUserName(name: String)
 }
 
 class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics): IntroRepositoryWork{
@@ -39,6 +41,13 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
     private val auth = FirebaseAuth.getInstance()
 
     override fun getLogged() = auth.currentUser
+
+    override fun updateUserName(name: String) {
+        val user = getLogged()
+        val request = UserProfileChangeRequest.Builder()
+            .setDisplayName(name).build();
+        user?.updateProfile(request)
+    }
 
     override fun logLogin(method: String){
         analytics.logLogin(method)

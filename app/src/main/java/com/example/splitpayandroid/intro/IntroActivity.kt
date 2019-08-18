@@ -3,6 +3,7 @@ package com.example.splitpayandroid.intro
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import com.google.android.material.snackbar.Snackbar
 import android.view.Menu
 import android.view.MenuItem
@@ -22,10 +23,12 @@ import com.example.splitpayandroid.util.SHARE_LINK_SHORT
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.UserProfileChangeRequest
 import dagger.android.AndroidInjection
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import org.w3c.dom.Text
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -113,28 +116,6 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    fun onRegister(view: View){
-        stdAuthOperation(IntroVM::create, onRegisteredListener(), onFailureListener("Registration"))
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun onLogin(view: View){
-        if(introVm.getLogged() != null){
-            goToGroupsActivity()
-        }
-        else {
-            stdAuthOperation(IntroVM::login, onLoginListener(), onFailureListener(("Login")))
-        }
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun verifyEmail(view: View){
-//        startActivity(Intent(this, ConfirmMailActivity::class.java))
-        introVm.emailOnlyRegistration(emailInput.text.toString(), onEmailOnlyFinishedListener(), onFailureListener("Email verification"))
-    }
-
-
     private fun onEmailOnlyFinishedListener() =
         OnCompleteListener<Void> {
             val msg = if(!it.isSuccessful) "Email verification failed" else "Email verification: check your mailbox and follow the link in the noreply message. "
@@ -159,6 +140,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
             val msg = if(!task.isSuccessful) "Registration failed" else "Authenticated user ${task.result?.user}"
             Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
             if(task.isSuccessful){
+                introVm.updateUserName(nameInput.text.toString())
                 introVm.logLogin("app")
                 introVm.biometricUnlocked.value = true
             }
@@ -231,6 +213,17 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
 
     }
 
+    private fun loginWithEmailPassword(){
+        val password = passwordInput.text.toString()
+        val email = emailInput.text.toString()
+        if(TextUtils.isEmpty(password) || TextUtils.isEmpty(email)){
+            Toast.makeText(this, "Both password and email values should be filled", Toast.LENGTH_LONG).show()
+        }
+        else{
+            stdAuthOperation(IntroVM::login, onLoginListener(), onFailureListener(("Login")))
+        }
+    }
+
     @Suppress("UNUSED_PARAMETER")
     fun shareClicked(view: View){
 
@@ -246,6 +239,46 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     @Suppress("UNUSED_PARAMETER")
     fun signOut(view: View){
         introVm.logout()
+        Toast.makeText(this, "Logout successful", Toast.LENGTH_LONG).show()
+    }
+
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onRegister(view: View){
+        val name = nameInput.text.toString()
+        val password = passwordInput.text.toString()
+        val email = emailInput.text.toString()
+        if(TextUtils.isEmpty(password) || TextUtils.isEmpty(email) || TextUtils.isEmpty(name)){
+            Toast.makeText(this, "Name, password and email values should be filled", Toast.LENGTH_LONG).show()
+        }
+        else {
+            stdAuthOperation(IntroVM::create, onRegisteredListener(), onFailureListener("Registration"))
+        }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun onLogin(view: View){
+        if(introVm.getLogged() != null){
+            goToGroupsActivity()
+        }
+        else {
+            loginWithEmailPassword()
+        }
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun verifyEmail(view: View){
+        val email = emailInput.text.toString()
+        if(TextUtils.isEmpty(email)){
+            Toast.makeText(this, "Email values should be filled", Toast.LENGTH_LONG).show()
+        }
+        else {
+            introVm.emailOnlyRegistration(
+                emailInput.text.toString(),
+                onEmailOnlyFinishedListener(),
+                onFailureListener("Email verification")
+            )
+        }
     }
 
 }

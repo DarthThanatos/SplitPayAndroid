@@ -1,6 +1,7 @@
 package com.example.splitpayandroid.di.module
 
 import android.content.Context
+import com.example.splitpayandroid.di.scope.ApplicationScope
 import com.example.splitpayandroid.retrofit.ConnectivityManager
 import com.example.splitpayandroid.retrofit.ConnectivityManagerImpl
 import dagger.Binds
@@ -18,6 +19,7 @@ abstract class ConnectivityModule{
     companion object {
         @JvmStatic
         @Provides
+//        @ApplicationScope
         fun provideConnectivityManager(context: Context): android.net.ConnectivityManager {
             return context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
         }

@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
 import com.example.splitpayandroid.architecture.VMFactory
@@ -15,6 +16,7 @@ import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import dagger.android.AndroidInjection
 
 import kotlinx.android.synthetic.main.activity_groups.*
+import timber.log.Timber
 import javax.inject.Inject
 
 class GroupsActivity : AppCompatActivity() {
@@ -46,10 +48,14 @@ class GroupsActivity : AppCompatActivity() {
         vm = ViewModelProviders.of(this, vmFactory).get(GroupVM::class.java)
         vm.tryGetDynamicLinkIfCorrectIntent(intent, onDynamicLinkSuccess(), onDynamiLinkFailure())
         vm.logYolo()
+        vm.loadUserGroups()
+        vm.groupsLiveData.observe(this, Observer {
+            Timber.d("Downloaded groups: $it")
+        })
     }
 
     private fun informWhoLogged(){
-        Toast.makeText(this, "${vm.getLogged()?.email ?: "Unknown"} has just logged in", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "${vm.getLogged()?.email ?: "Unknown"} has just logged in, name: ${vm.getLogged()?.displayName ?: "Unknown"}", Toast.LENGTH_LONG).show()
     }
 
     private fun onDynamicLinkSuccess() = OnSuccessListener<PendingDynamicLinkData> {
