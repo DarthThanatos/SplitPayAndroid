@@ -245,7 +245,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
 
     @Suppress("UNUSED_PARAMETER")
     fun signOut(view: View){
-        introVm.signout()
+        introVm.logout()
     }
 
 }

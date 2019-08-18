@@ -2,31 +2,53 @@ package com.example.splitpayandroid.intro
 
 import android.content.Intent
 import com.example.splitpayandroid.analytics.Analytics
+import com.example.splitpayandroid.model.UsersList
 import com.example.splitpayandroid.retrofit.UsersService
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
-import com.google.firebase.auth.ActionCodeSettings
-import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.*
+import io.reactivex.Observable
 import timber.log.Timber
 import javax.inject.Inject
 
-class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics){
+interface IntroRepositoryWork{
+    fun getLogged(): FirebaseUser?
+    fun logLogin(method: String)
+    fun logout()
+    fun confirmEmailOnly(
+        email: String,
+        intent: Intent,
+        onComplete: OnCompleteListener<AuthResult>,
+        onFailure: OnFailureListener
+    )
+
+    fun create(
+        email: String,
+        password: String,
+        onComplete: OnCompleteListener<AuthResult>,
+        onFailure: OnFailureListener
+    )
+
+    fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener)
+    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener)
+    fun getUserGroups(): Observable<UsersList>
+}
+
+class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics): IntroRepositoryWork{
 
     private val auth = FirebaseAuth.getInstance()
 
-    fun getLogged() = auth.currentUser
+    override fun getLogged() = auth.currentUser
 
-    fun logLogin(method: String){
+    override fun logLogin(method: String){
         analytics.logLogin(method)
     }
 
-    fun logout(){
+    override fun logout(){
         auth.signOut()
     }
 
-    fun confirmEmailOnly(email: String, intent: Intent, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    override fun confirmEmailOnly(email: String, intent: Intent, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         val emailLink = intent.data?.toString() ?: ""
         Timber.d(emailLink)
         if(auth.isSignInWithEmailLink(emailLink)){
@@ -34,15 +56,15 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
         }
     }
 
-    fun create(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    override fun create(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
 
-    fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    override fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
 
-    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
+    override fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
         val actionCodeSettings = ActionCodeSettings.newBuilder()
 
             // URL you want to redirect back to. The domain (www.example.com) for this
@@ -64,7 +86,7 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
         auth.sendSignInLinkToEmail(email, actionCodeSettings).addOnCompleteListener(onComplete).addOnFailureListener(onFailure)
     }
 
-    fun getUserGroups() =
+    override fun getUserGroups() =
         usersService.getUsersInGroup(3L)
 
 }

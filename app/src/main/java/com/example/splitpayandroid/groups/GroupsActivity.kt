@@ -1,6 +1,7 @@
 package com.example.splitpayandroid.groups
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -60,6 +61,12 @@ class GroupsActivity : AppCompatActivity() {
 
     private fun onDynamiLinkFailure() = OnFailureListener{
         Toast.makeText(this, "Error getting opening dynamic link: ${it.message}", Toast.LENGTH_LONG).show()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun checkNetwork(view: View){
+        val msg = if (vm.isNetworkConnected()) "Connected" else "Connection lost"
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 
 }
