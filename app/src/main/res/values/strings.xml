@@ -11,4 +11,5 @@
     <string name="biometric_negative_button_text">Cancel</string>
     <string name="title_activity_confirm_mail">ConfirmMailActivity</string>
     <string name="verified">verified</string>
+    <string name="flavor_logout_string">sign out default</string>
 </resources>

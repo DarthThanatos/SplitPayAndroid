@@ -1,5 +1,6 @@
 package com.example.splitpayandroid.retrofit
 
+import com.example.splitpayandroid.BuildConfig
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -7,13 +8,12 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 class RetrofitProvider{
 
-    private val BASE_URL = "http://192.168.0.73:8080"
+    private val BASE_URL = BuildConfig.API_URL
     private var usersService: UsersService
     private var groupsService: GroupsService
 

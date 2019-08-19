@@ -14,9 +14,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
-import io.reactivex.ObservableOnSubscribe
-import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
@@ -89,13 +86,10 @@ class GroupsRepository @Inject constructor(
             .flatMap { logAndPass(it, "api-before-saving")}
             .map { saveUserGroupsInDb(it) }
 
-    private fun getUserGroupsFromDb(): Observable<List<GroupDto>> {
-        val res = groupsDao.getGroups().map{
+    private fun getUserGroupsFromDb(): Observable<List<GroupDto>> =
+        groupsDao.getGroups().map{
             it.map{ GroupDto(it.groupId, it.displayName, it.isActive) }
-        }.apply{Timber.d("Got Groups from db: $this")}.singleOrError()//.toObservable()
-//        return Observable.create {  it.onNext(res.toBlocking().first()); it.onComplete() }
-        return res.toObservable()
-    }
+        }.apply{Timber.d("Got Groups from db: $this")}.toObservable()
 
     private fun saveUserGroupsInDb(groups: List<GroupDto>): List<GroupDto>{
         groupsDao.deleteUserGroups()

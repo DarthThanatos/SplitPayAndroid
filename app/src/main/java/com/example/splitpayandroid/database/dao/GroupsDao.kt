@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.splitpayandroid.database.entity.GroupEntity
-import io.reactivex.Observable
 import io.reactivex.Single
 
 @Dao
@@ -15,7 +14,7 @@ interface GroupsDao{
     fun insertUserGroups(paygroups: List<GroupEntity>)
 
     @Query("select * from paygroups")
-    fun getGroups(): Observable<List<GroupEntity>>
+    fun getGroups(): Single<List<GroupEntity>>
 
     @Query("delete from paygroups")
     fun deleteUserGroups()
