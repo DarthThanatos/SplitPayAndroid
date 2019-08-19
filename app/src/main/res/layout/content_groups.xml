@@ -23,4 +23,12 @@
             android:id="@+id/button5" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
             android:layout_marginBottom="16dp" app:layout_constraintBottom_toBottomOf="parent"
             android:onClick="checkNetwork"/>
+    <Button
+            android:text="get groups"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button6"
+            app:layout_constraintBottom_toBottomOf="@+id/button5" app:layout_constraintTop_toTopOf="@+id/button5"
+            app:layout_constraintStart_toEndOf="@+id/button5" android:layout_marginStart="8dp"
+            android:onClick="loadGroups"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

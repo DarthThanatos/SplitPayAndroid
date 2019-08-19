@@ -22,9 +22,10 @@ class BiometricDialogFragment : DialogFragment() {
     @Inject
     lateinit var vmFactory: VMFactory
 
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this)
         super.onAttach(context)
+
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

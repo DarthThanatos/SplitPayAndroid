@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Module
 class RetrofitProvider{
 
-    private val BASE_URL = "http://192.168.0.100:8080"
+    private val BASE_URL = "http://192.168.0.73:8080"
     private var usersService: UsersService
     private var groupsService: GroupsService
 

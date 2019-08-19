@@ -75,4 +75,9 @@ class GroupsActivity : AppCompatActivity() {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    fun loadGroups(view: View){
+        vm.loadUserGroups()
+    }
+
 }
