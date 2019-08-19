@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.splitpayandroid.database.entity.GroupEntity
 import io.reactivex.Observable
+import io.reactivex.Single
 
 @Dao
 interface GroupsDao{

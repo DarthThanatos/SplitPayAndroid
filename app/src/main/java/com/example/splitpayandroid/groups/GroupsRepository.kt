@@ -14,6 +14,9 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
+import io.reactivex.ObservableOnSubscribe
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
@@ -68,9 +71,6 @@ class GroupsRepository @Inject constructor(
             if(connectivityManager.isNetworkAvailable())
                 getUserGroupsFromApi().flatMap { logAndPass(it, "api-only") }
                     .startWith(getUserGroupsFromDb().flatMap { logAndPass(it, "db-only") })
-                    .startWith(Observable.just(
-                        listOf(GroupDto(999, "start", false))
-                    ))
                     .flatMap { logAndPass(it, "api-with-db") }
             else getUserGroupsFromDb().flatMap { logAndPass(it, "db-only") }
         return source.subscribeOn(Schedulers.io())
@@ -87,40 +87,26 @@ class GroupsRepository @Inject constructor(
             .getUserPaygroups(20005L)
             .apply{Timber.d("Got groups from api")}
             .flatMap { logAndPass(it, "api-before-saving")}
-//            .flatMap { saveUserGroupsInDb(it) }
-
-    private fun test(){
-        val g: Observable<List<GroupEntity>> = groupsDao.getGroups()
-        val a: Observable<List<GroupDto>> = g.flatMap { Observable.just(it.map{GroupDto(it.groupId, it.displayName, it.isActive)}) }
-        val b: Observable<List<GroupDto>> = g.map {it.map{GroupDto(it.groupId, it.displayName, it.isActive)}}
-        val c: Observable<List<GroupDto>> = g.map{saveUserGroupsInDb_(it.map{GroupDto(it.groupId, it.displayName, it.isActive)})}
-    }
-
-    private fun saveUserGroupsInDb_(groups: List<GroupDto>): List<GroupDto> {
-        groupsDao.deleteUserGroups()
-        saveUserGroups(groups)
-        return groups
-    }
+            .map { saveUserGroupsInDb(it) }
 
     private fun getUserGroupsFromDb(): Observable<List<GroupDto>> {
-        return groupsDao.getGroups().map{
+        val res = groupsDao.getGroups().map{
             it.map{ GroupDto(it.groupId, it.displayName, it.isActive) }
-        }.apply{Timber.d("Got groups from db: $this")}
+        }.apply{Timber.d("Got Groups from db: $this")}.singleOrError()//.toObservable()
+//        return Observable.create {  it.onNext(res.toBlocking().first()); it.onComplete() }
+        return res.toObservable()
     }
 
-
-
-    private fun saveUserGroupsInDb(groups: List<GroupDto>): Observable<List<GroupDto>> {
+    private fun saveUserGroupsInDb(groups: List<GroupDto>): List<GroupDto>{
         groupsDao.deleteUserGroups()
         saveUserGroups(groups)
         Timber.d("saving groups in db: $groups")
-        return Observable.just(groups)
+        return groups
     }
 
     private fun saveUserGroups(groups: List<GroupDto>){
         groups.map{
             GroupEntity(it.groupid, it.displayname, it.isactive)
-        }.apply{groupsDao.insertUserGroups(this)}
+        }.apply{groupsDao.insertUserGroups(this) }
     }
-
 }
