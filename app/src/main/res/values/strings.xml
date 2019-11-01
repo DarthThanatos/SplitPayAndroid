@@ -12,4 +12,11 @@
     <string name="title_activity_confirm_mail">ConfirmMailActivity</string>
     <string name="verified">verified</string>
     <string name="flavor_logout_string">sign out default</string>
+    <string name="welcome">Welcome to SplitPay</string>
+    <string name="first_time">First time user</string>
+    <string name="known_user">Welcome again!</string>
+    <string name="display_name">Display name:</string>
+    <string name="email">Email:</string>
+    <string name="mobile">Mobile:</string>
+    <string name="submit">submit</string>
 </resources>

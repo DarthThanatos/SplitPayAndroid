@@ -14,7 +14,7 @@ abstract class DatabaseModule{
     @Module
     companion object {
         @JvmStatic
-//        @ApplicationScope
+        @ApplicationScope
         @Provides
         internal fun provideDatabase(context: Context): Database =
                 Room.databaseBuilder(context, Database::class.java, "splitpay-db")
@@ -22,7 +22,7 @@ abstract class DatabaseModule{
                     .build()
 
         @JvmStatic
-//        @ApplicationScope
+        @ApplicationScope
         @Provides
         internal fun provideGroupsDao(database: Database): GroupsDao =
             database.groupsDao()

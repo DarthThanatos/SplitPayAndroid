@@ -1,13 +1,16 @@
 package com.example.splitpayandroid.intro
 
 import android.content.Intent
+import android.content.SharedPreferences
 import com.example.splitpayandroid.analytics.Analytics
+import com.example.splitpayandroid.model.User
 import com.example.splitpayandroid.model.UsersList
 import com.example.splitpayandroid.retrofit.UsersService
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.*
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -31,21 +34,31 @@ interface IntroRepositoryWork{
 
     fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener)
     fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener)
-    fun getUserGroups(): Observable<UsersList>
 
     fun updateUserName(name: String)
+    fun saveCredentials(name: String, email: String)
 }
 
-class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics): IntroRepositoryWork{
+class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics, private val sharedPreferences: SharedPreferences): IntroRepositoryWork {
+
+    override fun saveCredentials(name: String, email: String) {
+        sharedPreferences.edit().putString(EMAIL, email).putString(NAME, name).apply()
+    }
 
     private val auth = FirebaseAuth.getInstance()
+
+    fun getSavedCredentials() :Pair<String, String> {
+        val email = sharedPreferences.getString(EMAIL, "")!!
+        val name = sharedPreferences.getString(NAME, "")!!
+        return Pair(first = email, second = name)
+    }
 
     override fun getLogged() = auth.currentUser
 
     override fun updateUserName(name: String) {
         val user = getLogged()
         val request = UserProfileChangeRequest.Builder()
-            .setDisplayName(name).build();
+            .setDisplayName(name).build()
         user?.updateProfile(request)
     }
 
@@ -95,7 +108,9 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
         auth.sendSignInLinkToEmail(email, actionCodeSettings).addOnCompleteListener(onComplete).addOnFailureListener(onFailure)
     }
 
-    override fun getUserGroups() =
-        usersService.getUsersInGroup(3L)
+    companion object {
+        private const val EMAIL = "email"
+        private const val NAME = "name"
 
+    }
 }

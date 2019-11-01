@@ -8,7 +8,7 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
-import com.example.splitpayandroid.architecture.VMFactory
+import com.example.splitpayandroid.architecture.ViewModelFactory
 import com.example.splitpayandroid.groups.GroupsActivity
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
@@ -26,9 +26,9 @@ import javax.inject.Inject
 class ConfirmMailActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var vmFactory: VMFactory
+    lateinit var viewModelFactory: ViewModelFactory
 
-    private lateinit var introVM: IntroVM
+    private lateinit var introVM: IntroViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -44,7 +44,7 @@ class ConfirmMailActivity : AppCompatActivity() {
     }
 
     private fun initVM(){
-        introVM = ViewModelProviders.of(this, vmFactory).get(IntroVM::class.java)
+        introVM = ViewModelProviders.of(this, viewModelFactory).get(IntroViewModel::class.java)
     }
 
     @Suppress("UNUSED_PARAMETER")

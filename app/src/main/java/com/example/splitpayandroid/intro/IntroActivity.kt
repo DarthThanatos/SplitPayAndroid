@@ -1,12 +1,8 @@
 package com.example.splitpayandroid.intro
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import com.google.android.material.snackbar.Snackbar
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.core.hardware.fingerprint.FingerprintManagerCompat
@@ -14,106 +10,67 @@ import androidx.core.os.CancellationSignal
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
-import com.example.splitpayandroid.architecture.VMFactory
-import com.example.splitpayandroid.di.snippet.ConstructorInj
+import com.example.splitpayandroid.architecture.ViewModelFactory
 import com.example.splitpayandroid.groups.GroupsActivity
-import com.example.splitpayandroid.model.UsersList
-import com.example.splitpayandroid.retrofit.UsersService
 import com.example.splitpayandroid.util.SHARE_LINK_SHORT
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.UserProfileChangeRequest
-import dagger.android.AndroidInjection
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import org.w3c.dom.Text
-import timber.log.Timber
 import javax.inject.Inject
+import androidx.fragment.app.Fragment
+
 
 interface IntroView
 
-class SnackListener(private val activity: Activity): View.OnClickListener {
-
-    override fun onClick(v: View?) {
-        goToGroups()
-    }
-
-    private fun goToGroups(){
-        val intent = Intent(activity, GroupsActivity::class.java)
-        activity.startActivity(intent)
-    }
-}
 
 class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthenticationCallback.BiometricCallback {
 
-    @Inject lateinit var constructorInj: ConstructorInj
 
-    @Inject lateinit var usersService: UsersService
+    @Inject lateinit var viewModelFactory: ViewModelFactory
 
-    @Inject lateinit var vmFactory: VMFactory
-
-    @Inject lateinit var presenter: IntroPresenter
-
-    private lateinit var introVm: IntroVM
+    private lateinit var introViewModel: IntroViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        injectSelf()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_intro)
         setSupportActionBar(toolbar)
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", SnackListener(this)).show()
-        }
-        initPresenter(usersService)
-        initVM()
+        initViewModel()
     }
 
-    private fun injectSelf(){
-        AndroidInjection.inject(this)
-        constructorInj.snippet()
-    }
-
-    private fun initPresenter(usersService: UsersService){
-        presenter.attachView(this)
-        presenter.fetchUsers(usersService)
-    }
-
-    private fun initVM(){
-        introVm = ViewModelProviders.of(this, vmFactory).get(IntroVM::class.java)
-        introVm.usersList.observe(this, Observer<UsersList> { t ->
-            Timber.d("returned users list in introVm:")
-            Timber.d(t.toString())
-        })
-        introVm.biometricUnlocked.observe(this, Observer<Boolean> { unlocked ->
+    private fun initViewModel(){
+        introViewModel = ViewModelProviders.of(this, viewModelFactory).get(IntroViewModel::class.java)
+        introViewModel.biometricUnlocked.observe(this, Observer<Boolean> { unlocked ->
             if(unlocked){
                 bioRegister()
             }
         })
-        introVm.loadGroups()
+        introViewModel.readSavedCredentials()
+        introViewModel.savedCredentials.observe(this, Observer { credentials ->
+            if(credentials.first != ""){
+                showLoginScreen(credentials.first, credentials.second)
+            }
+            else{
+                showRegisterScreen()
+            }
+        })
     }
 
-    override fun onDestroy() {
-        presenter.detachView()
-        super.onDestroy()
+    private fun showFragment(fragmentFactory: ()->Fragment){
+        val newFragment = fragmentFactory()
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.add(R.id.intro_container, newFragment)
+        transaction.commit()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
+    private fun showRegisterScreen(){
+        showFragment {RegisterFragment.newInstance()}
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
-        }
+    private fun showLoginScreen(email: String, name: String){
+        showFragment {LoginFragment.newInstance(email = email, name = name)}
     }
 
     private fun onEmailOnlyFinishedListener() =
@@ -126,13 +83,13 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
         }
 
     private fun stdAuthOperation(
-        authOperation: IntroVM.(String, String, OnCompleteListener<AuthResult>, OnFailureListener) -> Unit,
+        authOperation: IntroViewModel.(String, String, OnCompleteListener<AuthResult>, OnFailureListener) -> Unit,
         onSuccess: OnCompleteListener<AuthResult>,
         onFailure: OnFailureListener
     ){
         val email = emailInput.text.toString()
         val password = passwordInput.text.toString()
-        authOperation(introVm, email, password, onSuccess, onFailure)
+        authOperation(introViewModel, email, password, onSuccess, onFailure)
     }
 
     private fun onRegisteredListener() =
@@ -140,9 +97,9 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
             val msg = if(!task.isSuccessful) "Registration failed" else "Authenticated user ${task.result?.user}"
             Toast.makeText(this@IntroActivity, msg, Toast.LENGTH_LONG).show()
             if(task.isSuccessful){
-                introVm.updateUserName(nameInput.text.toString())
-                introVm.logLogin("app")
-                introVm.biometricUnlocked.value = true
+                introViewModel.updateUserName(nameInput.text.toString())
+                introViewModel.logLogin("app")
+                introViewModel.biometricUnlocked.value = true
             }
         }
 
@@ -177,7 +134,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     private fun compatRegister(fingerprintManagerCompat: FingerprintManagerCompat){
-        introVm.getFingerPrint(this) { fp ->
+        introViewModel.getFingerPrint(this) { fp ->
             fingerprintManagerCompat.authenticate(
                 fp.cryptoObject,
                 0,
@@ -194,7 +151,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     override fun onAuthenticationHelp(msg: String) {
-        introVm.authenticationStatus.value = msg
+        introViewModel.authenticationStatus.value = msg
         Toast.makeText(this, "Hint: $msg", Toast.LENGTH_LONG).show()
     }
 
@@ -203,14 +160,13 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
     }
 
     override fun onAuthenticationError(msg: String) {
-        introVm.authenticationStatus.value = msg
+        introViewModel.authenticationStatus.value = msg
         Toast.makeText(this, "Error: $msg", Toast.LENGTH_LONG).show()
     }
 
     override fun onAuthenticationSucceeded(result: FingerprintManagerCompat.AuthenticationResult) {
-        introVm.authenticationStatus.value = "success"
+        introViewModel.authenticationStatus.value = "success"
         Toast.makeText(this, "Successfully authenticated", Toast.LENGTH_LONG).show()
-
     }
 
     private fun loginWithEmailPassword(){
@@ -220,7 +176,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
             Toast.makeText(this, "Both password and email values should be filled", Toast.LENGTH_LONG).show()
         }
         else{
-            stdAuthOperation(IntroVM::login, onLoginListener(), onFailureListener(("Login")))
+            stdAuthOperation(IntroViewModel::login, onLoginListener(), onFailureListener(("Login")))
         }
     }
 
@@ -238,7 +194,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
 
     @Suppress("UNUSED_PARAMETER")
     fun signOut(view: View){
-        introVm.logout()
+        introViewModel.logout()
         Toast.makeText(this, "Logout successful", Toast.LENGTH_LONG).show()
     }
 
@@ -252,13 +208,13 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
             Toast.makeText(this, "Name, password and email values should be filled", Toast.LENGTH_LONG).show()
         }
         else {
-            stdAuthOperation(IntroVM::create, onRegisteredListener(), onFailureListener("Registration"))
+            stdAuthOperation(IntroViewModel::create, onRegisteredListener(), onFailureListener("Registration"))
         }
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun onLogin(view: View){
-        if(introVm.getLogged() != null){
+        if(introViewModel.getLogged() != null){
             goToGroupsActivity()
         }
         else {
@@ -273,7 +229,7 @@ class IntroActivity : DaggerAppCompatActivity(), IntroView, CustomAuthentication
             Toast.makeText(this, "Email values should be filled", Toast.LENGTH_LONG).show()
         }
         else {
-            introVm.emailOnlyRegistration(
+            introViewModel.emailOnlyRegistration(
                 emailInput.text.toString(),
                 onEmailOnlyFinishedListener(),
                 onFailureListener("Email verification")

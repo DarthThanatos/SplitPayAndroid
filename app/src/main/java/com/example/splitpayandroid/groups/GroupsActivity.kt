@@ -8,8 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.example.splitpayandroid.R
-import com.example.splitpayandroid.architecture.VMFactory
-import com.example.splitpayandroid.di.snippet.ConstructorInj
+import com.example.splitpayandroid.architecture.ViewModelFactory
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
@@ -22,12 +21,9 @@ import javax.inject.Inject
 class GroupsActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var constructorInj: ConstructorInj
+    lateinit var viewModelFactory: ViewModelFactory
 
-    @Inject
-    lateinit var vmFactory: VMFactory
-
-    private lateinit var vm: GroupVM
+    private lateinit var viewModel: GroupViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -41,21 +37,20 @@ class GroupsActivity : AppCompatActivity() {
         }
         initVM()
         informWhoLogged()
-        constructorInj.snippet()
     }
 
     private fun initVM(){
-        vm = ViewModelProviders.of(this, vmFactory).get(GroupVM::class.java)
-        vm.tryGetDynamicLinkIfCorrectIntent(intent, onDynamicLinkSuccess(), onDynamiLinkFailure())
-        vm.logYolo()
-        vm.loadUserGroups()
-        vm.groupsLiveData.observe(this, Observer {
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(GroupViewModel::class.java)
+        viewModel.tryGetDynamicLinkIfCorrectIntent(intent, onDynamicLinkSuccess(), onDynamiLinkFailure())
+        viewModel.logYolo()
+        viewModel.loadUserGroups()
+        viewModel.groupsLiveData.observe(this, Observer {
             Timber.d("Downloaded groups: $it")
         })
     }
 
     private fun informWhoLogged(){
-        Toast.makeText(this, "${vm.getLogged()?.email ?: "Unknown"} has just logged in, name: ${vm.getLogged()?.displayName ?: "Unknown"}", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "${viewModel.getLogged()?.email ?: "Unknown"} has just logged in, name: ${viewModel.getLogged()?.displayName ?: "Unknown"}", Toast.LENGTH_LONG).show()
     }
 
     private fun onDynamicLinkSuccess() = OnSuccessListener<PendingDynamicLinkData> {
@@ -71,13 +66,13 @@ class GroupsActivity : AppCompatActivity() {
 
     @Suppress("UNUSED_PARAMETER")
     fun checkNetwork(view: View){
-        val msg = if (vm.isNetworkConnected()) "Connected" else "Connection lost"
+        val msg = if (viewModel.isNetworkConnected()) "Connected" else "Connection lost"
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun loadGroups(view: View){
-        vm.loadUserGroups()
+        viewModel.loadUserGroups()
     }
 
 }

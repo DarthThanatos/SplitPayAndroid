@@ -1,6 +1,9 @@
-package com.example.splitpayandroid.retrofit
+package com.example.splitpayandroid.di.module
 
 import com.example.splitpayandroid.BuildConfig
+import com.example.splitpayandroid.di.scope.ApplicationScope
+import com.example.splitpayandroid.retrofit.GroupsService
+import com.example.splitpayandroid.retrofit.UsersService
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import dagger.Module
 import dagger.Provides
@@ -33,11 +36,11 @@ class RetrofitProvider{
     }
 
     @Provides
-    @Singleton
+    @ApplicationScope
     fun provideUserService() = usersService
 
     @Provides
-    @Singleton
+    @ApplicationScope
     fun provideGroupService() = groupsService
 
 }

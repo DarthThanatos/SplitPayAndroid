@@ -7,6 +7,7 @@ import com.example.splitpayandroid.database.entity.GroupEntity
 import com.example.splitpayandroid.model.GroupDto
 import com.example.splitpayandroid.retrofit.ConnectivityManager
 import com.example.splitpayandroid.retrofit.GroupsService
+import com.example.splitpayandroid.retrofit.UsersService
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
@@ -15,6 +16,7 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import javax.inject.Inject
@@ -34,6 +36,7 @@ interface GroupRepositoryWork{
 class GroupsRepository @Inject constructor(
     private val analytics: Analytics,
     private val connectivityManager: ConnectivityManager,
+    private val usersService: UsersService,
     private val groupsService: GroupsService,
     private val groupsDao: GroupsDao
 ): GroupRepositoryWork{
