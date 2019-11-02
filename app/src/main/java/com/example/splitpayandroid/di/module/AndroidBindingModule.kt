@@ -1,10 +1,7 @@
 package com.example.splitpayandroid.di.module
 
 import com.example.splitpayandroid.groups.GroupsActivity
-import com.example.splitpayandroid.intro.ConfirmMailActivity
-import com.example.splitpayandroid.intro.IntroActivity
-import com.example.splitpayandroid.intro.LoginFragment
-import com.example.splitpayandroid.intro.RegisterFragment
+import com.example.splitpayandroid.intro.*
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -30,5 +27,8 @@ abstract class AndroidBindingModule{
 
     @ContributesAndroidInjector
     abstract fun contributeLoginFragment(): LoginFragment
+
+    @ContributesAndroidInjector
+    abstract fun contributeEmailOnlyRegistrationFragment(): EmailOnlyRegistrationFragment
 
 }

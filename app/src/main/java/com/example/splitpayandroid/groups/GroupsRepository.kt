@@ -16,7 +16,6 @@ import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import javax.inject.Inject

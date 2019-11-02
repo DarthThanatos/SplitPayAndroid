@@ -21,8 +21,9 @@ class FingerPrint(private val context: Context) {
     private val KEY_NAME = UUID.randomUUID().toString()
 
     val cryptoObject = FingerprintManagerCompat.CryptoObject(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) newCiptherV23()
-        else newCipher()
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) newCiptherV23()
+//        else newCipher()
+        newCipher()
     )
 
     private fun newCipher(): Cipher{

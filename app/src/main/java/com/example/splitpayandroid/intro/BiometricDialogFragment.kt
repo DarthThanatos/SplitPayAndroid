@@ -29,22 +29,22 @@ class BiometricDialogFragment : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        initVM()
+        initViewModel()
         return AlertDialog.Builder(activity)
             .setView(newView())
             .create()
     }
 
-    private fun initVM(){
+    private fun initViewModel(){
         activity?.apply {
-            val vm = ViewModelProviders.of(this, viewModelFactory).get(IntroViewModel::class.java)
-            vm.authenticationStatus.observe(this, object: Observer<String>{
-                override fun onChanged(t: String) {
-                    if(t == "success"){
+            val viewModel = ViewModelProviders.of(this, viewModelFactory).get(IntroViewModel::class.java)
+            viewModel.biometricAuthenticationStatus.observe(this, object: Observer<String>{
+                override fun onChanged(status: String) {
+                    if(status == "success"){
                         dismiss()
                         return
                     }
-                    itemStatus.setText(t)
+                    itemStatus.setText(status)
                 }
             })
         }

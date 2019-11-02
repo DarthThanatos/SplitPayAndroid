@@ -2,9 +2,11 @@ package com.example.splitpayandroid.di.module
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.hardware.fingerprint.FingerprintManagerCompat
 import com.example.splitpayandroid.App
 import com.example.splitpayandroid.BuildConfig
 import com.example.splitpayandroid.di.scope.ApplicationScope
+import com.example.splitpayandroid.fingerprint.FingerPrint
 import com.example.splitpayandroid.intro.BiometricDialogFragment
 import com.example.splitpayandroid.retrofit.ConnectivityManager
 import com.example.splitpayandroid.retrofit.ConnectivityManagerImpl
@@ -44,5 +46,20 @@ abstract class ApplicationModule{
         fun provideSharedPreferences(context: Context): SharedPreferences {
             return context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE)
         }
+
+        @JvmStatic
+        @Provides
+        @ApplicationScope
+        fun provideFingerprintManager(context: Context): FingerprintManagerCompat {
+            return FingerprintManagerCompat.from(context)
+        }
+
+        @JvmStatic
+        @Provides
+        @ApplicationScope
+        fun provideFingerprint(context: Context): FingerPrint {
+            return FingerPrint(context)
+        }
+
     }
 }

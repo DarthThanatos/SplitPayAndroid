@@ -17,6 +17,14 @@
     <string name="known_user">Welcome again!</string>
     <string name="display_name">Display name:</string>
     <string name="email">Email:</string>
-    <string name="mobile">Mobile:</string>
+    <string name="password">Password:</string>
     <string name="submit">submit</string>
+    <string name="email_only">Want to register through email?</string>
+    <string name="welcome_again">Welcome again</string>
+    <string name="or">or</string>
+    <string name="register_new_user">Register new user</string>
+    <string name="enter_confirm_email">Enter the email at which we will send confirmation link</string>
+    <string name="register_normally">Want to register normally?</string>
+    <string name="confirming_email">Confirming email</string>
+    <string name="confirm_email_desc">Type your email and display name below</string>
 </resources>

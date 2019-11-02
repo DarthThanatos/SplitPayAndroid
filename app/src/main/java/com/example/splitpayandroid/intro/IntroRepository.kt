@@ -2,75 +2,66 @@ package com.example.splitpayandroid.intro
 
 import android.content.Intent
 import android.content.SharedPreferences
+import androidx.core.hardware.fingerprint.FingerprintManagerCompat
+import androidx.core.os.CancellationSignal
 import com.example.splitpayandroid.analytics.Analytics
-import com.example.splitpayandroid.model.User
-import com.example.splitpayandroid.model.UsersList
-import com.example.splitpayandroid.retrofit.UsersService
+import com.example.splitpayandroid.fingerprint.FingerPrint
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.*
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import timber.log.Timber
 import javax.inject.Inject
 
-interface IntroRepositoryWork{
-    fun getLogged(): FirebaseUser?
-    fun logLogin(method: String)
-    fun logout()
-    fun confirmEmailOnly(
-        email: String,
-        intent: Intent,
-        onComplete: OnCompleteListener<AuthResult>,
-        onFailure: OnFailureListener
-    )
 
-    fun create(
-        email: String,
-        password: String,
-        onComplete: OnCompleteListener<AuthResult>,
-        onFailure: OnFailureListener
-    )
+class IntroRepository @Inject constructor (
+    private val fingerprintManager: FingerprintManagerCompat,
+    private val fingerPrint: FingerPrint,
+    private val analytics: Analytics,
+    private val sharedPreferences: SharedPreferences
+) {
 
-    fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener)
-    fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener)
+    fun loggedIn() = auth.currentUser != null
 
-    fun updateUserName(name: String)
-    fun saveCredentials(name: String, email: String)
-}
+    fun saveEmail(email: String) {
+        sharedPreferences.edit().putString(EMAIL, email).apply()
+    }
 
-class IntroRepository @Inject constructor (private val usersService: UsersService, private val analytics: Analytics, private val sharedPreferences: SharedPreferences): IntroRepositoryWork {
+    fun hasFingerprintHardware() = fingerprintManager.isHardwareDetected
 
-    override fun saveCredentials(name: String, email: String) {
-        sharedPreferences.edit().putString(EMAIL, email).putString(NAME, name).apply()
+    fun authenticateBiometrically(callback: CustomAuthenticationCallback.BiometricCallback){
+        fingerprintManager.authenticate(
+            fingerPrint.cryptoObject,
+            0,
+            CancellationSignal(),
+            CustomAuthenticationCallback(callback),
+            null
+        )
     }
 
     private val auth = FirebaseAuth.getInstance()
 
-    fun getSavedCredentials() :Pair<String, String> {
+    fun getSavedEmail(): String {
+        println("current user: ${auth.currentUser?.displayName ?: "None"}")
         val email = sharedPreferences.getString(EMAIL, "")!!
-        val name = sharedPreferences.getString(NAME, "")!!
-        return Pair(first = email, second = name)
+        return email
     }
 
-    override fun getLogged() = auth.currentUser
-
-    override fun updateUserName(name: String) {
-        val user = getLogged()
+    fun updateUserName(name: String) {
+        val user = auth.currentUser
         val request = UserProfileChangeRequest.Builder()
             .setDisplayName(name).build()
         user?.updateProfile(request)
     }
 
-    override fun logLogin(method: String){
+    fun logLogin(method: String){
         analytics.logLogin(method)
     }
 
-    override fun logout(){
+    fun logout(){
         auth.signOut()
     }
 
-    override fun confirmEmailOnly(email: String, intent: Intent, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    fun confirmEmail(email: String, intent: Intent, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         val emailLink = intent.data?.toString() ?: ""
         Timber.d(emailLink)
         if(auth.isSignInWithEmailLink(emailLink)){
@@ -78,15 +69,15 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
         }
     }
 
-    override fun create(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    fun createUserHaving(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
 
-    override fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
+    fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
 
-    override fun emailOnlyRegistration(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
+    fun verifyEmail(email: String, onComplete: OnCompleteListener<Void>, onFailure: OnFailureListener){
         val actionCodeSettings = ActionCodeSettings.newBuilder()
 
             // URL you want to redirect back to. The domain (www.example.com) for this
@@ -110,7 +101,6 @@ class IntroRepository @Inject constructor (private val usersService: UsersServic
 
     companion object {
         private const val EMAIL = "email"
-        private const val NAME = "name"
 
     }
 }
