@@ -6,10 +6,12 @@ import androidx.core.hardware.fingerprint.FingerprintManagerCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.splitpayandroid.di.scope.ApplicationScope
+import com.example.splitpayandroid.model.User
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.AuthResult
 import io.reactivex.disposables.CompositeDisposable
+import java.security.InvalidParameterException
 import javax.inject.Inject
 
 @ApplicationScope
@@ -157,11 +159,13 @@ class IntroViewModel @Inject constructor (private val introRepository: IntroRepo
                 if(!task.isSuccessful) "Registration failed"
                 else "Authenticated user ${task.result?.user}"
             if(task.isSuccessful){
-                introRepository.updateUserName(name)
-                introRepository.logLogin("app")
-                introRepository.saveEmail(email)
                 showProgressBar.value = false
-                showGroupsScreen.value = true
+                introRepository.saveEmail(email)
+                createApiUser(email = email, name = name) {
+                    introRepository.updateFirebaseUserName(name)
+                    introRepository.logLogin("app")
+                    showGroupsScreen.value = true
+                }
             }
         }
 
@@ -178,11 +182,27 @@ class IntroViewModel @Inject constructor (private val introRepository: IntroRepo
             if(!it.isSuccessful) "Email verification failed"
             else "Verified mail of the user ${it.result?.user?.email}"
         if(it.isSuccessful){
-            introRepository.saveEmail(email)
-            introRepository.updateUserName(name)
             showProgressBar.value = false
-            showIntroScreen.value = true
+            introRepository.saveEmail(email)
+            createApiUser(email = email, name = name){
+                introRepository.updateFirebaseUserName(name)
+                showIntroScreen.value = true
+            }
         }
+    }
+
+    private fun createApiUser(email: String, name: String, onSuccess: (User)-> Unit){
+        composite.add(
+            introRepository.createApiUser(email = email, name = name)
+                .doOnNext {
+                    it.userid?.apply {
+                        introRepository.saveUserId(this)
+                    }
+                    ?: throw InvalidParameterException("UserId is null - registration failed") }
+                .subscribe(onSuccess) {
+                    toastMessagesLiveData.value = it.message
+                }
+        )
     }
 
     fun moveToRegister() {

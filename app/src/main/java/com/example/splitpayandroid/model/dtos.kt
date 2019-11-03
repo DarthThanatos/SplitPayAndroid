@@ -2,11 +2,11 @@ package com.example.splitpayandroid.model
 
 
 data class User(
-    val userid: Long,
-    val email: String  = "",
-    val displayname: String = "",
-    val isoffline: Boolean = true,
-    val avatarUrl: String = ""
+    val userid: Long? = null,
+    val email: String?  = null,
+    val displayname: String? = null,
+    val isoffline: Boolean? = null,
+    val avatarUrl: String? = null
 )
 
 typealias UsersList = List<User>

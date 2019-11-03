@@ -10,5 +10,10 @@ interface GroupsService{
     @GET("/paygroups/user/{userid}")
     fun getUserPaygroups(@Path("userid") userId: Long): Observable<List<GroupDto>>
 
+    @GET("/paygroups/participating-user/{userid}")
+    fun getPaygroupsOfParticipating(@Path("userid") userId: Long): Observable<List<GroupDto>>
+
+    @GET("/paygroups/all")
+    fun getAllPaygroups(): Observable<List<GroupDto>>
 
 }

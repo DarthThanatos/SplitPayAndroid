@@ -6,9 +6,16 @@ import androidx.core.hardware.fingerprint.FingerprintManagerCompat
 import androidx.core.os.CancellationSignal
 import com.example.splitpayandroid.analytics.Analytics
 import com.example.splitpayandroid.fingerprint.FingerPrint
+import com.example.splitpayandroid.model.User
+import com.example.splitpayandroid.retrofit.UsersService
+import com.example.splitpayandroid.util.EMAIL
+import com.example.splitpayandroid.util.USER_ID
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.auth.*
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -17,13 +24,20 @@ class IntroRepository @Inject constructor (
     private val fingerprintManager: FingerprintManagerCompat,
     private val fingerPrint: FingerPrint,
     private val analytics: Analytics,
+    private val usersService: UsersService,
     private val sharedPreferences: SharedPreferences
 ) {
 
     fun loggedIn() = auth.currentUser != null
 
     fun saveEmail(email: String) {
+        println("Saving user email: $email")
         sharedPreferences.edit().putString(EMAIL, email).apply()
+    }
+
+    fun saveUserId(id: Long){
+        println("Saving user id: $id")
+        sharedPreferences.edit().putLong(USER_ID, id).apply()
     }
 
     fun hasFingerprintHardware() = fingerprintManager.isHardwareDetected
@@ -46,7 +60,13 @@ class IntroRepository @Inject constructor (
         return email
     }
 
-    fun updateUserName(name: String) {
+    fun createApiUser(email: String, name: String) =
+        usersService.createUser(User(email = email, displayname = name))
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
+
+    fun updateFirebaseUserName(name: String) {
         val user = auth.currentUser
         val request = UserProfileChangeRequest.Builder()
             .setDisplayName(name).build()
@@ -72,6 +92,12 @@ class IntroRepository @Inject constructor (
     fun createUserHaving(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
     }
+
+    fun deleteUser(userId: Long): Observable<Void> =
+        usersService.deleteUser(userId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+
 
     fun login(email: String, password: String, onComplete: OnCompleteListener<AuthResult>, onFailure: OnFailureListener){
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener (onComplete).addOnFailureListener(onFailure)
@@ -99,8 +125,4 @@ class IntroRepository @Inject constructor (
         auth.sendSignInLinkToEmail(email, actionCodeSettings).addOnCompleteListener(onComplete).addOnFailureListener(onFailure)
     }
 
-    companion object {
-        private const val EMAIL = "email"
-
-    }
 }

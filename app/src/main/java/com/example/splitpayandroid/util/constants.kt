@@ -1,5 +1,9 @@
 package com.example.splitpayandroid.util
 
+
+const val EMAIL = "email"
+const val USER_ID = "user_id"
+
 const val SHARE_LINK = "https://splitpayandroid.page.link/" +
         "?link=http://ithanatos.yo.o/welcome" +
         "&apn=com.example.splitpayandroid" +

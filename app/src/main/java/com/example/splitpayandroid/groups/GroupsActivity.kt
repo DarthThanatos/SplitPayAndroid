@@ -3,22 +3,19 @@ package com.example.splitpayandroid.groups
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import com.bumptech.glide.Glide
 import com.example.splitpayandroid.R
 import com.example.splitpayandroid.architecture.ViewModelFactory
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.firebase.dynamiclinks.PendingDynamicLinkData
-import dagger.android.AndroidInjection
+import com.example.splitpayandroid.model.User
+import com.google.android.material.tabs.TabLayout
+import dagger.android.support.DaggerAppCompatActivity
 
-import kotlinx.android.synthetic.main.activity_groups.*
-import timber.log.Timber
+import kotlinx.android.synthetic.main.content_groups.*
 import javax.inject.Inject
 
-class GroupsActivity : AppCompatActivity() {
+class GroupsActivity : DaggerAppCompatActivity() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelFactory
@@ -26,53 +23,87 @@ class GroupsActivity : AppCompatActivity() {
     private lateinit var viewModel: GroupViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_groups)
-        setSupportActionBar(toolbar)
-
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
-        initVM()
-        informWhoLogged()
+        initViewModel()
     }
 
-    private fun initVM(){
-        viewModel = ViewModelProviders.of(this, viewModelFactory).get(GroupViewModel::class.java)
-        viewModel.tryGetDynamicLinkIfCorrectIntent(intent, onDynamicLinkSuccess(), onDynamiLinkFailure())
-        viewModel.logYolo()
-        viewModel.loadUserGroups()
-        viewModel.groupsLiveData.observe(this, Observer {
-            Timber.d("Downloaded groups: $it")
+    private fun initViewModel(){
+        createAndAssignViewModel()
+        subscribeOnToastMessages()
+        subscribeProgressBar()
+        subscribeApiUser()
+    }
+
+    private fun createAndAssignViewModel() {
+        viewModel = ViewModelProviders.of(
+            this, viewModelFactory
+        ).get(GroupViewModel::class.java)
+    }
+
+    private fun subscribeOnToastMessages(){
+        viewModel.toastMessagesLiveData.observe(this, Observer { message ->
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         })
     }
 
-    private fun informWhoLogged(){
-        Toast.makeText(this, "${viewModel.getLogged()?.email ?: "Unknown"} has just logged in, name: ${viewModel.getLogged()?.displayName ?: "Unknown"}", Toast.LENGTH_LONG).show()
+    private fun subscribeApiUser(){
+        viewModel.loadSavedUser()
+        viewModel.userLiveData.observe(this, Observer {
+            bindUserProfile(it)
+            setupTabLayout()
+            setupViewPager()
+//            showFragment { GroupsFragment.newInstance() }
+        })
     }
 
-    private fun onDynamicLinkSuccess() = OnSuccessListener<PendingDynamicLinkData> {
-        if(it != null){
-            val deepLink = it.link
-            Toast.makeText(this, "Opened deep Link: $deepLink", Toast.LENGTH_LONG).show()
-        }
+    private fun subscribeProgressBar(){
+        viewModel.progressLiveData.observe(this, Observer {shouldShow ->
+            groupsProgressBar.visibility = if(shouldShow) View.VISIBLE else View.INVISIBLE
+        })
     }
 
-    private fun onDynamiLinkFailure() = OnFailureListener{
-        Toast.makeText(this, "Error getting opening dynamic link: ${it.message}", Toast.LENGTH_LONG).show()
+    private fun setupTabLayout(){
+        groupsTabLayout.addTab(groupsTabLayout.newTab().setText("All"))
+        groupsTabLayout.addTab(groupsTabLayout.newTab().setText("My created"))
+        groupsTabLayout.addTab(groupsTabLayout.newTab().setText("My participating"))
+        groupsTabLayout.tabGravity = TabLayout.GRAVITY_FILL;
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    fun checkNetwork(view: View){
-        val msg = if (viewModel.isNetworkConnected()) "Connected" else "Connection lost"
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    private fun setupViewPager(){
+        groupsPager.adapter = GroupsPageAdapter(supportFragmentManager)
+        groupsPager.currentItem = 0
+
+        groupsPager.addOnPageChangeListener(
+            TabLayout.TabLayoutOnPageChangeListener(groupsTabLayout) //inform tab layout that page was slided
+        )
+
+        groupsTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                println("Tab selected: ${tab.position}")
+                groupsPager.currentItem = tab.position
+
+            }
+
+            override fun onTabUnselected(tab: TabLayout.Tab) {
+
+            }
+
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    fun loadGroups(view: View){
-        viewModel.loadUserGroups()
+
+    private fun bindUserProfile(user: User){
+        groupsAppBarTitle.text = resources.getString(R.string.logged_in_info, user.displayname)
+        Glide.with(this).load(user.avatarUrl).into(groupsProfileButton);
     }
+
+//    private fun showFragment(fragmentFactory: () -> Fragment){
+//        val newFragment = fragmentFactory()
+//        val transaction = supportFragmentManager.beginTransaction()
+//        transaction.replace(R.id.groupsFragmentContainer, newFragment)
+//        transaction.commit()
+//    }
 
 }

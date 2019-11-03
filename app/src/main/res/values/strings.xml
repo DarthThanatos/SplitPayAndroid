@@ -27,4 +27,5 @@
     <string name="register_normally">Want to register normally?</string>
     <string name="confirming_email">Confirming email</string>
     <string name="confirm_email_desc">Type your email and display name below</string>
+    <string name="logged_in_info">%1$s has logged in</string>
 </resources>

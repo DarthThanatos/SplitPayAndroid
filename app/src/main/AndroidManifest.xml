@@ -42,16 +42,16 @@
                 android:name=".groups.GroupsActivity"
                 android:label="@string/title_activity_groups"
                 android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
+            <!--<intent-filter>-->
+                <!--<action android:name="android.intent.action.VIEW"/>-->
 
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <!--<category android:name="android.intent.category.DEFAULT"/>-->
+                <!--<category android:name="android.intent.category.BROWSABLE"/>-->
 
-                <data
-                        android:host="ithanatos.yo.o"
-                        android:scheme="http"/>
-            </intent-filter>
+                <!--<data-->
+                        <!--android:host="ithanatos.yo.o"-->
+                        <!--android:scheme="http"/>-->
+            <!--</intent-filter>-->
         </activity>
         <activity
                 android:name=".intro.IntroActivity"
