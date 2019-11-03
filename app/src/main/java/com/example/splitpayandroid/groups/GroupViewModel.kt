@@ -14,11 +14,14 @@ class GroupViewModel @Inject constructor(private val groupsRepository: GroupsRep
 
     private val composite: CompositeDisposable = CompositeDisposable()
 
-    val groupsList = ArrayList<GroupDto>()
 
     val userLiveData = MutableLiveData<User>()
-    val groupsLoaded = MutableLiveData<Boolean>()
     val progressLiveData = MutableLiveData<Boolean>()
+
+
+    val allGroups = MutableLiveData<List<GroupDto>>()
+    val userGroups = MutableLiveData<List<GroupDto>>()
+    val participatingGroups = MutableLiveData<List<GroupDto>>()
 
     val toastMessagesLiveData = MutableLiveData<String>()
 
@@ -43,9 +46,7 @@ class GroupViewModel @Inject constructor(private val groupsRepository: GroupsRep
         composite.add(groupsRepository
             .getAllGroups()
             .subscribe {
-                groupsList.removeAll { true }
-                groupsList.addAll(it)
-                groupsLoaded.value = true
+                allGroups.value = it
             }
         )
     }
@@ -55,9 +56,7 @@ class GroupViewModel @Inject constructor(private val groupsRepository: GroupsRep
         composite.add(groupsRepository
             .getGroupsOfParticipating()
             .subscribe {
-                groupsList.removeAll { true }
-                groupsList.addAll(it)
-                groupsLoaded.value = true
+                participatingGroups.value = it
             }
         )
     }
@@ -66,9 +65,7 @@ class GroupViewModel @Inject constructor(private val groupsRepository: GroupsRep
         composite.add(groupsRepository
             .getUserGroups()
             .subscribe {
-                groupsList.removeAll { true }
-                groupsList.addAll(it)
-                groupsLoaded.value = true
+                userGroups.value = it
             }
         )
     }

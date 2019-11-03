@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 
 import com.example.splitpayandroid.R
 import com.example.splitpayandroid.architecture.ViewModelFactory
+import com.example.splitpayandroid.model.GroupDto
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_all_groups.*
 import javax.inject.Inject
@@ -22,6 +23,7 @@ class GroupsFragment : DaggerFragment() {
 
     private lateinit var viewModel: GroupViewModel
 
+    private val groupsList = ArrayList<GroupDto>()
     private lateinit var adapter: GroupsAdapter
 
     private var position: Int = -1
@@ -54,21 +56,35 @@ class GroupsFragment : DaggerFragment() {
 
     private fun subscribeUserGroups(){
         when(position){
-            0 -> viewModel.loadAllGroups()
-            1 -> viewModel.loadUserGroups()
-            2 -> viewModel.loadGroupsOfParticipating()
+            0 -> {
+                viewModel.loadAllGroups()
+                viewModel.allGroups.observe(this, Observer {
+                    handleUserGroups(it)
+                })
+            }
+            1 -> {
+                viewModel.loadUserGroups()
+                viewModel.userGroups.observe(this, Observer {
+                    handleUserGroups(it)
+                })
+            }
+            2 -> {
+                viewModel.loadGroupsOfParticipating()
+                viewModel.participatingGroups.observe(this, Observer {
+                    handleUserGroups(it)
+                })
+            }
         }
-        viewModel.groupsLoaded.observe(this, Observer {
-            handleUserGroups()
-        })
     }
 
-    private fun handleUserGroups(){
+    private fun handleUserGroups(groups: List<GroupDto>){
+        groupsList.removeAll { true }
+        groupsList.addAll(groups)
         adapter.notifyDataSetChanged()
     }
 
     private fun setupRecyclerView(){
-        adapter = GroupsAdapter(viewModel.groupsList)
+        adapter = GroupsAdapter(groupsList)
         groupsFramgentRecyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
             adapter = this@GroupsFragment.adapter
